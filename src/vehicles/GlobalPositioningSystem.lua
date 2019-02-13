@@ -196,6 +196,8 @@ function GlobalPositioningSystem:onLoad(savegame)
     spec.dirtyFlag = self:getNextDirtyFlag()
 
     GlobalPositioningSystem.registerMultiPurposeActionEvents(self)
+
+    spec.stateMachine = GuidanceFSMUtil.createStateMachineForObject(self)
 end
 
 function GlobalPositioningSystem:onPostLoad(savegame)
@@ -486,10 +488,12 @@ function GlobalPositioningSystem:onUpdate(dt)
         return
     end
 
-    if guidanceSteeringIsActive then
-        GlobalPositioningSystem.guideSteering(self, dt)
+    spec.stateMachine:update(dt)
 
-        spec.headlandProcessor:handle(dt)
+    if guidanceSteeringIsActive then
+        --GlobalPositioningSystem.guideSteering(self, dt)
+        --
+        --spec.headlandProcessor:handle(dt)
     end
 end
 
@@ -829,6 +833,13 @@ function GlobalPositioningSystem.actionEventEnableSteering(self, actionName, inp
         g_currentMission:showBlinkingWarning(g_i18n:getText("guidanceSteering_warning_createTrackFirst"), 2000)
     else
         spec.lastInputValues.guidanceSteeringIsActive = not spec.lastInputValues.guidanceSteeringIsActive
+
+        -- Todo: place holder to trigger the stateMachine
+        if spec.lastInputValues.guidanceSteeringIsActive then
+            spec.stateMachine:setState(GuidanceFSMUtil.FOLLOW_LINE_STATE)
+        else
+            spec.stateMachine:reset()
+        end
         Logger.info("guidanceSteeringIsActive", spec.lastInputValues.guidanceSteeringIsActive)
     end
 end
